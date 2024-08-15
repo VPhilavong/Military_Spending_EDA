@@ -1,0 +1,229 @@
+## Group Members
+- Shivam Shah
+- Vincent Philavong
+- Jane Zang
+- William Bishop
+
+# Total Acquisition Value Analysis (Army vs. Navy)
+**Introduction:**
+The procurement and allocation of defense equipment are pivotal aspects of international security and diplomatic relations. Through programs such as the Excess Defense Articles (EDA), the United States significantly influences global defense landscapes by redistributing surplus military equipment to allied nations. This report investigates the economic implications of these transfers, specifically comparing the total acquisition values of equipment transferred by the U.S. Navy and Army from 2010 to 2020. We hypothesize that the Navy's total acquisition value exceeds that of the Army, reflecting broader strategic priorities in U.S. defense policy. This analysis aims to uncover patterns that could inform future decisions in resource allocation and defense strategy.
+
+**Background:**
+Data Source and Collection: Our primary dataset is sourced from the Defense Security Cooperation Agency (DSCA), which administers the EDA program. This comprehensive dataset encompasses the years 2010 to 2020 and consists of 4,117 records detailing various aspects of military equipment transfers.
+**Implementing Agency:** Specifies the branch of the U.S. military (Navy or Army) responsible for the transfer.
+
+**Total Acquisition Value:** Represents the initial monetary value assigned by the U.S. government to the transferred items.
+
+**Country of Transfer:** The recipient nation of the equipment.
+
+**This study will address the question:**Is the yearly mean acquisition value of items transferred by the Navy greater than those by the Army from 2010 to 2020? We will explore this through various statistical analyses, including t-tests to compare means and graphical representations to visualize trends. Factors such as geopolitical shifts, changes in defense budgets, and the condition of transferred equipment are factors which may affect the interpretation of our results. We will employ a combination of statistics, especially bar graphs to compare the Navy and Army spendings. Specifically, we aim to compare the mean acquisition values between the Navy and Army using a two-sample t-test, assuming unequal variances. Graphical analyses will include bar graphs and plots to depict trends and distributions of acquisition values over time and between agencies.
+
+Our study aims to answer the following question:- **Is the true yearly mean acquisition value of an item transferred from one of the USA’s implementing agencies to a country by the Army less than that by the Navy from the years 2010 to 2020?**
+
+## Data for this analysis will be sourced from the Defense Security Cooperation Agency (DSCA):- 
+**Website:** [Defense Security Cooperation Agency - Excess Defense Articles (EDA)](https://www.dsca.mil/programs/excess-defense-articles-eda)
+
+
+```{r setup, echo= FALSE, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE,
+                      warning = FALSE, error = TRUE, fig.height = 3)
+library(tidyverse)
+library(kableExtra)
+library(broom)
+library(scales)
+source("../scripts/viridis.R")
+source("../scripts/ggprob.R")
+theme_set(theme_minimal())
+```
+
+## Analysis 
+
+Firstly we will tidy our data by filtering for the means of only the Navy and Army. Then we will create data visualizations and numerical datasets to create an idea about which implementing agency has the higher mean acquisition.
+
+This data summary shows highest mean acquisition of a implementing agency and year.
+  
+```{r, fig.width=12,fig.height=3, echo= FALSE}
+eda_data <- read_csv('../data/eda_data.csv')
+
+# Filter data for the years 2010 to 2020 and for the agencies Navy and Army
+eda_filtered <- eda_data %>% 
+  filter(Implementing_Agency %in% c('Navy', 'Army'), Fiscal_Year_of_Request >= 2010 , Fiscal_Year_of_Request <= 2020) %>% 
+  rename(year = Fiscal_Year_of_Request, total = Total_Acquisition_Value) %>% 
+  select(year, Implementing_Agency, total) %>% 
+  group_by(year, Implementing_Agency) %>% 
+  summarise(average = mean(total, na.rm = TRUE)) 
+
+kable(eda_filtered %>% arrange(desc(average))%>% head(10))
+```
+
+8 out of the 10 highest averages are the Navy. This indicates that the Navy has a higher mean acquisition value.
+
+This visualization is a bar plot showing the mean total acquisition values of each implementing agency.
+
+```{r, fig.width=12,fig.height=3, echo= FALSE}
+ggplot(eda_filtered, aes(x = year, y = average)) +
+  geom_histogram(stat = "identity", aes(fill = Implementing_Agency),
+                 position = "dodge", bins = 10) +
+  labs(x = "Year",
+       y = "Mean Acquisition Value",
+       title = "Mean Acquisition Value Over Years by Implementing Agency",
+       fill = "Implementing Agency") +
+  theme_minimal() +
+  scale_y_continuous(labels = label_dollar(prefix = "$", big.mark = ",", decimal.mark = ".")) +
+  scale_x_continuous(breaks = unique(eda_filtered$year))
+```
+
+We can conclude from both of these bar graphs in the years that the Navy typically has a higher mean acquisition value in 2010 through 2020.
+
+To help differentiate the mean acquisition values, we created an overlapping density plot to show the differences between the mean acquisition values by year.
+
+```{r, fig.width=12,fig.height=3, echo=FALSE}
+ggplot(eda_filtered, aes(x = year, y = average)) +
+  geom_density(stat = "identity", aes(fill = Implementing_Agency), alpha = 0.5) +  # Use geom_density for density plot +
+  labs(x = "Year",
+       y = "Mean Acquisition Value",
+       title = "Density Plot of Mean Acquisition Value Over Years by Implementing Agency",
+       fill = "Implementing Agency") +
+  theme_minimal() +
+  scale_y_continuous(labels = label_dollar(prefix = "$", big.mark = ",", decimal.mark = ".")) +
+  scale_x_continuous(breaks = unique(eda_filtered$year))
+```
+From this plot we can conclude that only in the years 2014 and 2017 the Army had a greater mean acquistion value than the Navy. In the other years, the Navy has a higher mean acquisition value than Army.
+
+Lastly, using a boxplot we are able to visualize the mean acquistion values throughout the year 2010-2020. 
+
+```{r, echo= FALSE, fig.width=12, fig.height=6}
+ggplot(eda_filtered, aes(x = Implementing_Agency, y = average, fill = Implementing_Agency)) + 
+  geom_boxplot() +
+  labs(x = "Implementing Agency",
+       y = "Mean Acquisition Value",
+       title = "Boxplot of Mean Acquisition Value by Implementing Agency 2010-2020"
+       ) +
+  scale_y_continuous(labels = label_dollar(prefix = "$", big.mark = ",", decimal.mark = ".")) + 
+  theme_minimal()
+  
+```
+
+With this box plot we see that the mean acquisition value of the Navy is higher than that of the Army through 2010-2020.
+
+
+
+### Hypothesis Testing
+
+## Using a hypothesis for a difference of two means we are able to strengthen our thesis with statistical evidence
+
+## Model Statement
+* Let $X_i$, for $i = 1, ... n_1$ be the observed times of military supplies a country has bought from the US Army.
+* Let $Y_i$, for $i = 1, ... n_2$ be the observed times of military supplies a country has bought from the US Navy
+
+<!-- * Let $\mu_x$ and $\sigma_x$ be the true average and standard deviation of the acquisition value for the US Army. -->
+* Let $\mu_y$ and $\sigma_y$ be the true average and standard deviation of the acquisition value for the US Navy.
+
+## State Hypotheses
+
+* Our **parameter of interest** is $\mu_x - \mu_y$.
+
+* The null hypothesis captures the idea that there is no pattern/total randomness/no difference.
+
+$$
+H_0: \mu_x = \mu_y \\
+\text{or, equivalently: } H_0: \mu_x-\mu_y = 0 
+$$
+
+## The alternative hypothesis states the mean acquisition values of the Army is less than the Navy.
+
+ 
+$$
+H_a: \mu_x < \mu_y \\
+\text{or, equivalently: } H_0: \mu_x-\mu_y < 0 
+$$
+
+```{r, echo=FALSE}
+eda_filtered_test <- eda_data %>%
+  filter(Implementing_Agency %in% c('Navy', 'Army'), Fiscal_Year_of_Request >= 2010, Fiscal_Year_of_Request <= 2020)
+
+summary_stats <- eda_filtered_test %>%
+  group_by(Implementing_Agency) %>%
+  summarise(
+    Mean = mean(Total_Acquisition_Value, na.rm = TRUE),
+    SD = sd(Total_Acquisition_Value, na.rm = TRUE),
+    Median = median(Total_Acquisition_Value, na.rm = TRUE),
+    IQR = IQR(Total_Acquisition_Value, na.rm = TRUE),
+    n = n(),
+    Total = sum(Total_Acquisition_Value, na.rm = TRUE)
+  )
+```
+
+Doing a t-test on the Army and the Navy averages:
+
+```{r, echo= FALSE}
+xbar = summary_stats$Mean[1]
+ybar = summary_stats$Mean[2]
+sx = summary_stats$SD[1]
+sy = summary_stats$SD[2]
+nx = summary_stats$n[1]
+ny = summary_stats$n[2]
+
+se = sqrt(sx^2/nx + sy^2/ny)
+
+test_stat = ((xbar-ybar) - 0)/se
+
+test_stat
+```
+Since the t = -4.05 is we find that there is a significance difference in the mean acquisition values of the Navy and the Army.
+
+
+Doing a p-test:
+
+```{r, echo= FALSE}
+W = (sx^2/nx + sy^2/ny)^2 / (sx^4/(nx^2*(nx-1)) + sy^4/(ny^2*(ny-1)))
+pt(test_stat, df = W)
+```
+
+p = 3.165e-5 which is less than 0.05. We find evidence that the Navy's mean acquisition value is higher than that of the Army in the years 2010-2020. Thus our alternate hypothesis is most likely correct
+
+Lastly, calculating our confidence interval: 
+
+```{r, echo = FALSE}
+# Same code from earlier, copy/pasted for convenience
+army = eda_data %>%
+  filter(Implementing_Agency == "Army") %>% 
+  pull(Total_Acquisition_Value)
+
+navy = eda_data %>%
+  filter(Implementing_Agency == "Navy") %>% 
+  pull(Total_Acquisition_Value)
+
+# Notice the specification of alternative = "less". The confidence interval becomes "one-sided" which we don't teach in this class, but the hypothesis test results are verified.
+ci = t.test(army, navy, alternative = "less")
+ci$conf.int
+```
+
+We are 95% confident that the true mean difference in acquisition value between the Army and Navy is between -Inf to -7136795.
+
+### Discussion
+
+## Interpretation
+After examining the results of both our two-sample t-test and the graphs of our data set, we can conclude that, statistically, the yearly mean acquisition value of the Army is less than that of the Navy from 2010 to 2020.
+With the United States being the most dominant superpower worldwide, these conclusions paint an important picture of the world and the geopolitical landscape. The US uses both its military and monetary power to influence geopolitics, and this examination of our monetary policy in the military-industrial space is important when trying to understand the United State’s global values and objectives. With the Army making up the most total acquisition value of transferred items, this can point to the large number of countries we are supporting with ground equipment for insurgents, terrorists, border disputes, or other land-based disagreements. 
+	
+## Shortcomings	
+Looking at the mean acquisition value of items transferred, with the Navy having a significantly higher average, this can point to two conclusions. First, land-based weapons, like artillery and firearms, are cheaper on average than naval equipment, boats, or other similar equipment, leading to this imbalance. Second, with not every country having access to an ocean or large body of water, the US might value countries' positive ocean geography more than a landlocked country, leading to an imbalance in the mean acquisition value for transferred items. These results allow us to better understand our current world and how it functions on a geopolitical scale.
+	
+## Future Direction/Additional Work
+Building off this understanding, to gain an even better expertise of the United States’s foreign policy it could be interesting to examine military purchases from the US combined with our current data set. This could offset the possible skew of this data because the US is probably more likely to give military aid to a poor country rather than a wealthy country producing or purchasing its own arms. Combining that with a grouping based on the region could paint a comprehensive picture of the United State’s current interests and allow us to answer questions like “Does a country’s geography contribute to its foreign aid?” or “Is there an association with one branch of the military and a specific geographic area or country?”. Improving our understanding of the largest military in the world can point us to the United State’s worries across the world, informing us of current events and possible repercussions.
+
+## Conclusion
+This analysis not only highlights the significant differences in military spending and strategic emphasis between the Navy and Army but also serves as a critical lens through which we can view the broader implications of U.S. military engagements worldwide. By continuing to explore these aspects, we can better understand the complex interplay of military, economic, and diplomatic actions shaping today's geopolitics.
+
+
+
+
+
+
+
+
+
+
+
+
