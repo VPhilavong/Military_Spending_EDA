@@ -1,0 +1,48 @@
+# Project: STAT 240 Draft Proposal
+# File: draft_proposal_240.R
+# Author: Vincent Philavong
+# Date: 4/14/2024
+
+# Load required packages
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, error = TRUE, fig.height = 3)
+library(tidyverse)
+library(kableExtra)
+source("../scripts/viridis.R")
+source("../scripts/ggprob.R")
+theme_set(theme_minimal())
+```
+
+```{r}
+# Assuming the data is in a CSV file named 'eda_data.csv' in the working directory
+# Read the dataset
+eda_data <- read_csv('../data/eda_data.csv')
+
+# Filter data for the years 2010 to 2020 and for the agencies Navy and Army
+eda_filtered <- eda_data %>% 
+  filter(Implementing_Agency %in% c('Navy', 'Army'), Fiscal_Year_of_Request >= 2010, Fiscal_Year_of_Request <= 2020)
+
+
+
+# Summarize the Total Acquisition Value by Implementing Agency
+summary_by_agency <- eda_filtered %>% 
+  group_by(Implementing_Agency) %>% 
+  summarise(Total_Acquisition_Value = sum(Total_Acquisition_Value, na.rm = TRUE))
+
+# Display the summary table
+print(summary_by_agency)
+
+# Create a bar graph comparing the Total Acquisition Value by agency
+ggplot(summary_by_agency, aes(x = Implementing_Agency, y = Total_Acquisition_Value, fill = Implementing_Agency)) +
+  geom_bar(stat = 'identity') +
+  labs(title = "Total Acquisition Value by Implementing Agency (2010-2020)",
+       x = "Implementing Agency",
+       y = "Total Acquisition Value (USD)") +
+  theme_minimal()
+
+# Perform a t-test to compare the means of Total Acquisition Value between the Navy and Army
+t_test_results <- t.test(Total_Acquisition_Value ~ Implementing_Agency, data = eda_filtered)
+
+# Display the t-test results
+print(t_test_results)
+```
