@@ -1,2 +1,2 @@
 ﻿# Military-Spending-EDA
-[View the PDF](./path/to/file.pdf)
+[View the PDF](https://github.com/VPhilavong/Military_Spending_EDA/blob/main/Military_Spending_EDA.pdf)
